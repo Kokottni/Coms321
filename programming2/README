@@ -1,0 +1,4 @@
+For this assignment we were told to create and disassembler for binary code.
+The files that can be disassembled are .legv8asm.machine files as they are in binary.
+To assemble a legv8asm file into a .legv8asm.machine file you use the assembler by doing ./legv8emul <legv8 assembly file> -a.
+From here run "build.sh" to build the java disassembler, and then "run.sh <legv8 machine file>" to run the disassembler.
