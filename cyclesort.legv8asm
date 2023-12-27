@@ -1,0 +1,216 @@
+//Kenneth Schueman kenschue
+//Nicholas Kokott kokottni
+
+
+main:
+ADD X0, XZR, XZR                // Array address a is X0
+ADDI X1, XZR, #100          	// Number of elements n is stored in X1
+
+
+SUBI SP, SP, #16
+STUR X0, [SP, #0]
+STUR X1, [SP, #8]
+
+
+BL fill
+
+
+LDUR X1, [SP, #8]
+LDUR X0, [SP, #0]
+BL cycle_sort
+
+
+// Finding specific values using binary search (always 0)
+LDUR X0, [SP, #0]
+ADDI X1, XZR, #0
+LDUR X2, [SP, #8]
+SUBI X2, X2, #1
+ADDI X3, XZR, #0
+BL binary_search
+PRNT X0
+
+
+// Finding largest value using binary search (elements - 1)
+LDUR X0, [SP, #0]
+ADDI X1, XZR, #0
+LDUR X2, [SP, #8]
+SUBI X2, X2, #1
+LDUR X3, [SP, #8]
+SUBI X3, X3, #1
+BL binary_search
+PRNT X0
+
+
+// Finding middle value using binary search (elements / 2)
+LDUR X0, [SP, #0]
+ADDI X1, XZR, #0
+LDUR X2, [SP, #8]
+SUBI X2, X2, #1
+LDUR X3, [SP, #8]
+LSR X3, X3, #1              // LSR #1 is division by 2.0
+BL binary_search
+PRNT X0
+
+
+// Checking for a value outside the range 
+LDUR X0, [SP, #0]
+ADDI X1, XZR, #0
+LDUR X2, [SP, #8]
+SUBI X2, X2, #1
+LDUR X3, [SP, #8]
+BL binary_search
+
+
+PRNT X0
+LDUR X1, [SP, #8]
+LDUR X0, [SP, #0]
+ADDI SP, SP, #16
+B end
+
+
+fill:
+// Filling the array
+ADD X9, X0, XZR             // X9 a --> X0
+ADD X10, X1, XZR            // X10 n --> X1
+
+
+fill_top:
+SUBI X10, X10, #1
+STUR X10, [X9, #0]
+ADDI X9, X9, #8
+SUBS XZR, X10, XZR
+B.NE fill_top
+BR LR
+
+
+swap:
+// Swapping two values
+LDUR X9, [X0, #0]           // X0 is b
+LDUR X10, [X1, #0]          // X1 is c
+ADD X11, X9, XZR           
+ADD X9, X10, XZR           
+ADD X10, X11, XZR           
+STUR X9, [X0, #0]           
+STUR X10, [X1, #0]          
+BR LR
+
+
+find_idx:
+// Finding the index of an element in the array
+ADD X9, X0, XZR             // X9 a --> X0
+ADDI X0, XZR, #0            // X0 is initialized to 0
+ADDI X10, XZR, #0           // X10 is i and is initialized to 1
+
+
+find_idx_top:
+LSL X11, X0, #3
+ADD X11, X9, X11
+LDUR X11, [X11, #0]
+LSL X12, X10, #3
+ADD X12, X9, X12
+LDUR X12, [X12, #0]
+SUBS XZR, X11, X12
+B.LE post_check
+ADD X0, X10, XZR
+
+
+post_check:
+ADDI X10, X10, #1
+SUBS XZR, X10, X1
+B.NE find_idx_top
+BR LR
+
+
+cycle_sort:
+// Sorting the array using cycle sort
+ADD X19, X0, XZR                // X19 a --> X0
+ADD X20, X1, XZR                // X20 n --> X1
+ADDI X21, XZR, #0           // X21 is i and is initialized to 0
+SUBI SP, SP, #8
+STUR LR, [SP, #0]
+
+
+top_cycle:
+LSL X22, X21, #3
+ADD X0, X19, X22
+SUB X1, X20, X21
+BL find_idx
+
+
+ADD X0, X0, X21
+LSL X0, X0, #3
+ADD X0, X19, X0
+ADD X1, X19, X22
+BL swap
+
+
+ADDI X21, X21, #1
+SUBS XZR, X21, X20
+B.NE top_cycle
+LDUR LR, [SP, #0]
+ADDI SP, SP, #8
+BR LR
+
+
+binary_search:
+// Performing binary search
+ADD X19, X0, XZR                // X19 a --> X0
+ADD X9, X1, XZR             // X9 starting value --> X1
+ADD X10, X2, XZR                // X10 end value 
+ADD X20, X3, XZR                // X20 --> X3
+SUBI SP, SP, #8
+STUR LR, [SP, #0]
+ADD X11, X9, X10                // X11 = beginning + end
+LSR X11, X11, #1                
+SUBS XZR, X10, X20
+B.LT outside_range
+
+
+LSL X12, X11, #3
+ADD X12, X12, X19
+LDUR X12, [X12, #0]
+SUBS XZR, X12, X20
+B.EQ found_value
+
+
+SUBS XZR, X12, X20
+B.GT idx_greater_than
+
+
+B idx_less_than
+
+
+idx_greater_than:
+ADD X0, X19, XZR
+ADD X1, X9, XZR
+SUBI X2, X11, #1
+ADD X3, X20, XZR
+BL binary_search
+
+
+idx_less_than:
+ADD X0, X19, XZR
+ADDI X1, X11, #1
+ADD X2, X10, XZR
+ADD X3, X20, XZR
+BL binary_search
+
+
+found_value:
+ADD X0, X12, XZR
+B done
+
+
+outside_range:
+ADDI X0, XZR, #-1
+B done
+
+
+done:
+LDUR LR, [SP, #0]
+ADDI SP, SP, #8
+BR LR
+
+
+end:
+DUMP
